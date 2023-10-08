@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "grpc/pbgo/user";
+
+service UserService {
+  rpc Get(GetRequest) returns (GetResponse);
+}
+
+message User {
+  reserved 1;
+  reserved "id";
+
+  enum Gender {
+    GENDER_UNSPECIFIED = 0;
+    GENDER_MALE = 1;
+    GENDER_FEMALE = 2;
+  }
+
+  int64 uid = 2;
+  string name = 3;
+  Gender gender = 4;
+  repeated string favorites = 5;
+}
+
+message GetRequest {
+  int64 id = 1;
+}
+
+message GetResponse {
+  User user = 1;
+}
