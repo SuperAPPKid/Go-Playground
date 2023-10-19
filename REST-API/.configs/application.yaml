@@ -1,0 +1,10 @@
+app:
+  runmode: debug
+  port: 8787
+  readTimeout: 10
+  writeTimeout: 10
+postgreSQL:
+  port: 5432
+  userName: admin
+  password: password
+  host: localhost
