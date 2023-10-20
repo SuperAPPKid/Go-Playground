@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"restful/config"
+	"restful/models"
 	"syscall"
 	"time"
 
@@ -15,6 +16,8 @@ import (
 )
 
 func main() {
+	models.AutoMigrate()
+
 	gin.SetMode(config.App.RunMode)
 	router := gin.Default()
 
