@@ -1,8 +1,23 @@
 package user
 
 import (
+	"restful/service/postgresql"
+
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
+
+func FetchAll() ([]*User, error) {
+	var users []*User
+	r := postgresql.Start().Preload(clause.Associations).Find(&users)
+	return users, r.Error
+}
+
+func FetchByID(id int) (*User, error) {
+	user := &User{ID: uint(id)}
+	r := postgresql.Start().Preload(clause.Associations).First(user)
+	return user, r.Error
+}
 
 type User struct {
 	ID        uint    `gorm:"primaryKey;autoIncrement"`
@@ -13,4 +28,14 @@ type User struct {
 
 func (User) TableName() string {
 	return "User"
+}
+
+func (u *User) Create() error {
+	r := postgresql.Start().Create(u)
+	return r.Error
+}
+
+func (u *User) Delete() error {
+	r := postgresql.Start().Delete(u)
+	return r.Error
 }
