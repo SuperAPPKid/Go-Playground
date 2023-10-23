@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"restful/config"
+	userController "restful/controllers/user"
 	"restful/models"
 	"syscall"
 	"time"
@@ -20,6 +21,22 @@ func main() {
 
 	gin.SetMode(config.App.RunMode)
 	router := gin.Default()
+
+	userRouter := router.Group("/user")
+	{
+		userRouter.GET("/", userController.GetAll)
+		userRouter.POST("/", userController.Create)
+
+		userRouter.GET("/:id", func(c *gin.Context) {
+			c.Redirect(http.StatusPermanentRedirect, c.Request.URL.Path+"/profile")
+		})
+
+		userRouter.GET("/:id/profile", userController.GetProfileByID)
+		userRouter.DELETE("/me", userController.Auth, userController.Delete)
+		userRouter.GET("/me/profile", userController.Auth, userController.GetSelfProfile)
+		userRouter.PUT("/me/profile", userController.Auth, userController.UpdateSelfProfile)
+		userRouter.PATCH("/me/profile", userController.Auth, userController.PatchSelfProfile)
+	}
 
 	server := http.Server{
 		Addr:         fmt.Sprintf(":%d", config.App.Port),
