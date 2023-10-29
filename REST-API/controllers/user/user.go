@@ -7,8 +7,11 @@ import (
 	"restful/controllers"
 	userModel "restful/models/user"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type profileReq struct {
@@ -50,7 +53,57 @@ func (r profileReq) verify() error {
 	return nil
 }
 
+const (
+	JWTAuthSecret   string = "Super@ppCid"
+	JWTAuthIssuer   string = "SuperAppKid@gmail.com"
+	JWTAuthAudience string = "com.superappkid.www"
+)
+
 func Auth(c *gin.Context) {
+	authStr := c.Request.Header.Get("Authorization")
+	authParts := strings.Split(authStr, " ")
+
+	if len(authParts) > 0 && len(authParts) != 2 && authParts[0] != "Bearer" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, controllers.TextResponse("invalid authorization"))
+		return
+	}
+
+	token, err := jwt.Parse(authParts[1], func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(JWTAuthSecret), nil
+	},
+		jwt.WithIssuer(JWTAuthIssuer),
+		jwt.WithAudience(JWTAuthAudience),
+		jwt.WithValidMethods([]string{
+			jwt.SigningMethodHS256.Name,
+			jwt.SigningMethodHS384.Name,
+			jwt.SigningMethodHS512.Name,
+		}),
+	)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, controllers.ErrorResponse(err))
+		return
+	}
+
+	sub, err := token.Claims.GetSubject()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, controllers.ErrorResponse(err))
+		return
+	}
+
+	intID, err := strconv.Atoi(sub)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, err)
+		return
+	}
+	if intID <= 0 {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, errors.New("invalid user id"))
+		return
+	}
+
+	c.Set("id", intID)
 	c.Next()
 }
 
@@ -88,6 +141,43 @@ func GetProfileByID(c *gin.Context) {
 	c.JSON(http.StatusOK, controllers.DataResponse(resp))
 }
 
+func CreateTokenByID(c *gin.Context) {
+	idStr := c.Param("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusNotFound, controllers.TextResponse(fmt.Sprintf("user: %s not exist", idStr)))
+		return
+	}
+
+	if _, err := userModel.FetchByID(id); err != nil {
+		c.JSON(http.StatusNotFound, controllers.ErrorResponse(err))
+		return
+	}
+
+	now := time.Now()
+	claims := &jwt.RegisteredClaims{
+		Issuer:    JWTAuthIssuer,
+		Audience:  []string{JWTAuthAudience},
+		Subject:   strconv.Itoa(id),
+		IssuedAt:  jwt.NewNumericDate(now),
+		ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute)),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenStr, err := token.SignedString([]byte(JWTAuthSecret))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controllers.ErrorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, controllers.DataResponse(
+		gin.H{
+			"token": tokenStr,
+		},
+	))
+}
+
 func Create(c *gin.Context) {
 	req := profileReq{}
 
@@ -123,7 +213,7 @@ func Create(c *gin.Context) {
 }
 
 func Delete(c *gin.Context) {
-	id := c.MustGet("id").(int)
+	id := c.GetInt("id")
 
 	user := userModel.User{ID: uint(id)}
 	if err := user.Delete(); err != nil {
@@ -134,7 +224,7 @@ func Delete(c *gin.Context) {
 }
 
 func GetSelfProfile(c *gin.Context) {
-	id := c.MustGet("id").(int)
+	id := c.GetInt("id")
 
 	user, err := userModel.FetchByID(id)
 	if err != nil {
@@ -147,7 +237,8 @@ func GetSelfProfile(c *gin.Context) {
 }
 
 func UpdateSelfProfile(c *gin.Context) {
-	id := c.MustGet("id").(int)
+	id := c.GetInt("id")
+
 	req := profileReq{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -177,7 +268,8 @@ func UpdateSelfProfile(c *gin.Context) {
 }
 
 func PatchSelfProfile(c *gin.Context) {
-	id := c.MustGet("id").(int)
+	id := c.GetInt("id")
+
 	patchMap := make(map[string]interface{})
 
 	if err := c.ShouldBindJSON(&patchMap); err != nil {

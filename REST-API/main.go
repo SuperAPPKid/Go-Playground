@@ -31,6 +31,7 @@ func main() {
 			c.Redirect(http.StatusPermanentRedirect, c.Request.URL.Path+"/profile")
 		})
 
+		userRouter.POST("/:id/token", userController.CreateTokenByID)
 		userRouter.GET("/:id/profile", userController.GetProfileByID)
 		userRouter.DELETE("/me", userController.Auth, userController.Delete)
 		userRouter.GET("/me/profile", userController.Auth, userController.GetSelfProfile)
