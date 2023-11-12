@@ -7,6 +7,17 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+type User struct {
+	ID        uint    `gorm:"primaryKey;autoIncrement"`
+	Profile   Profile `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	CreatedAt int64   `gorm:"autoCreateTime"`
+	gorm.DeletedAt
+}
+
+func (User) TableName() string {
+	return "User"
+}
+
 func FetchAll() ([]*User, error) {
 	var users []*User
 	r := postgresql.Start().Preload(clause.Associations).Find(&users)
@@ -17,17 +28,6 @@ func FetchByID(id int) (*User, error) {
 	user := &User{ID: uint(id)}
 	r := postgresql.Start().Preload(clause.Associations).First(user)
 	return user, r.Error
-}
-
-type User struct {
-	ID        uint    `gorm:"primaryKey;autoIncrement"`
-	Profile   Profile `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	CreatedAt int64   `gorm:"autoCreateTime"`
-	gorm.DeletedAt
-}
-
-func (User) TableName() string {
-	return "User"
 }
 
 func (u *User) Create() error {
