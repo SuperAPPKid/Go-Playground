@@ -1,11 +1,15 @@
 package user
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"restful/controllers"
 	userModel "restful/models/user"
+	"restful/service/redis"
 	"strconv"
 	"strings"
 	"time"
@@ -32,6 +36,10 @@ type profileResp struct {
 	Email       string           `json:"email,omitempty"`
 	PhoneNumber string           `json:"phone,omitempty"`
 }
+
+const (
+	RedisKeyFmtUserProfile = "User:%d;Profile"
+)
 
 func (r profileReq) verify() error {
 	if r.Name == "" {
@@ -131,6 +139,16 @@ func GetProfileByID(c *gin.Context) {
 		return
 	}
 
+	redisKey := fmt.Sprintf(RedisKeyFmtUserProfile, id)
+	jsonStr, err := redis.Start().GetEx(context.Background(), redisKey, time.Second*30).Result()
+	if err == nil {
+		c.Data(http.StatusOK, gin.MIMEJSON, []byte(jsonStr))
+		return
+	} else if err != redis.Nil {
+		c.JSON(http.StatusInternalServerError, controllers.ErrorResponse(err))
+		return
+	}
+
 	user, err := userModel.FetchByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, controllers.ErrorResponse(err))
@@ -138,7 +156,16 @@ func GetProfileByID(c *gin.Context) {
 	}
 
 	resp := transUser2Resp(user)
-	c.JSON(http.StatusOK, controllers.DataResponse(resp))
+	jsonByte, err := json.Marshal(resp)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controllers.ErrorResponse(err))
+		return
+	}
+	if err := redis.Start().SetEx(context.Background(), redisKey, string(jsonByte), time.Second*30).Err(); err != nil {
+		c.JSON(http.StatusInternalServerError, controllers.ErrorResponse(err))
+		return
+	}
+	c.Data(http.StatusOK, gin.MIMEJSON, jsonByte)
 }
 
 func CreateTokenByID(c *gin.Context) {
@@ -215,6 +242,11 @@ func Create(c *gin.Context) {
 func Delete(c *gin.Context) {
 	id := c.GetInt("id")
 
+	redisKey := fmt.Sprintf(RedisKeyFmtUserProfile, id)
+	if err := redis.Start().Del(context.Background(), redisKey); err != nil {
+		log.Println(err)
+	}
+
 	user := userModel.User{ID: uint(id)}
 	if err := user.Delete(); err != nil {
 		c.JSON(http.StatusBadRequest, controllers.ErrorResponse(err))
@@ -238,6 +270,11 @@ func GetSelfProfile(c *gin.Context) {
 
 func UpdateSelfProfile(c *gin.Context) {
 	id := c.GetInt("id")
+
+	redisKey := fmt.Sprintf(RedisKeyFmtUserProfile, id)
+	if err := redis.Start().Del(context.Background(), redisKey); err != nil {
+		log.Println(err)
+	}
 
 	req := profileReq{}
 
@@ -269,6 +306,11 @@ func UpdateSelfProfile(c *gin.Context) {
 
 func PatchSelfProfile(c *gin.Context) {
 	id := c.GetInt("id")
+
+	redisKey := fmt.Sprintf(RedisKeyFmtUserProfile, id)
+	if err := redis.Start().Del(context.Background(), redisKey); err != nil {
+		log.Println(err)
+	}
 
 	patchMap := make(map[string]interface{})
 
