@@ -16,7 +16,7 @@ func get(url string) ([]byte, error) {
 	}
 	defer r.Body.Close()
 
-	data, err := io.ReadAll(r.Body)
+	data, _ := io.ReadAll(r.Body)
 	return data, nil
 }
 
