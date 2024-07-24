@@ -41,7 +41,7 @@ func main() {
 	}
 
 	server := http.Server{
-		Addr:         fmt.Sprintf(":%d", config.App.Port),
+		Addr:         fmt.Sprintf("localhost:%d", config.App.Port),
 		Handler:      router,
 		ReadTimeout:  time.Duration(config.App.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(config.App.WriteTimeout) * time.Second,
