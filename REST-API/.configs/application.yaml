@@ -5,6 +5,5 @@ app:
   writeTimeout: 10
 postgreSQL:
   port: 5432
-  userName: admin
-  password: password
+  userName: postgres
   host: localhost
