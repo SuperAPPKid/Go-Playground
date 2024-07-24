@@ -3,4 +3,6 @@
 *.pxt
 *.uxp
 *.uxt
+.vscode/
 .DS_Store
+go.work*
