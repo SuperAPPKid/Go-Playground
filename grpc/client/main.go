@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	userpb "grpc/pbgo/user"
+	userpb "github.com/SuperAPPKid/Go-Playground/grpc/pbgo/user"
 )
 
 func main() {

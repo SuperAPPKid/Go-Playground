@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"restful/controllers"
-	userModel "restful/models/user"
-	"restful/service/redis"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/SuperAPPKid/Go-Playground/REST-API/controllers"
+	userModel "github.com/SuperAPPKid/Go-Playground/REST-API/models/user"
+	"github.com/SuperAPPKid/Go-Playground/REST-API/service/redis"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"

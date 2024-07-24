@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"restful/config"
-	userController "restful/controllers/user"
-	"restful/models"
 	"syscall"
 	"time"
+
+	"github.com/SuperAPPKid/Go-Playground/REST-API/config"
+	userController "github.com/SuperAPPKid/Go-Playground/REST-API/controllers/user"
+	"github.com/SuperAPPKid/Go-Playground/REST-API/models"
 
 	"github.com/gin-gonic/gin"
 )

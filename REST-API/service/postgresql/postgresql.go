@@ -2,8 +2,9 @@ package postgresql
 
 import (
 	"fmt"
-	"restful/config"
 	"sync"
+
+	"github.com/SuperAPPKid/Go-Playground/REST-API/config"
 
 	postgresDriver "gorm.io/driver/postgres"
 	"gorm.io/gorm"

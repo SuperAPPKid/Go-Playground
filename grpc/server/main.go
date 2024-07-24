@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	userpb "grpc/pbgo/user"
+	userpb "github.com/SuperAPPKid/Go-Playground/grpc/pbgo/user"
 )
 
 type userServiceServer struct {

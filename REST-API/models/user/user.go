@@ -1,7 +1,7 @@
 package user
 
 import (
-	"restful/service/postgresql"
+	"github.com/SuperAPPKid/Go-Playground/REST-API/service/postgresql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

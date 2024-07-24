@@ -1,8 +1,8 @@
 package models
 
 import (
-	"restful/models/user"
-	"restful/service/postgresql"
+	"github.com/SuperAPPKid/Go-Playground/REST-API/models/user"
+	"github.com/SuperAPPKid/Go-Playground/REST-API/service/postgresql"
 )
 
 func AutoMigrate() {

@@ -2,7 +2,7 @@ package user
 
 import (
 	"errors"
-	"restful/service/postgresql"
+	"github.com/SuperAPPKid/Go-Playground/REST-API/service/postgresql"
 )
 
 type Gender string
